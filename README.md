@@ -22,7 +22,7 @@ function initOrbitrace({ service }) {
         orgId: process.env.ORBITRACE_ORG_ID,
         projectId: process.env.ORBITRACE_PROJECT_ID,
         endpoint: process.env.ORBITRACE_ENDPOINT,
-        environment: process.env.NODE_ENV,
+        environment: process.env.APP_ENV,
         service,
         version: process.env.APP_VERSION,
     });
@@ -189,6 +189,6 @@ ORBITRACE_API_KEY=your-api-key
 ORBITRACE_ORG_ID=your-org-id
 ORBITRACE_PROJECT_ID=your-project-id
 ORBITRACE_ENDPOINT=your-endpoint
-NODE_ENV=production
+APP_ENV=production
 APP_VERSION=1.0.0
 ```
