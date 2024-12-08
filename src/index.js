@@ -1,5 +1,3 @@
-// Orbitrace.js
-
 class Orbitrace {
 	#config;
 
@@ -97,4 +95,4 @@ class Orbitrace {
 	}
 }
 
-export default Orbitrace;
+module.exports = Orbitrace;
