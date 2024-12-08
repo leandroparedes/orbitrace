@@ -1,10 +1,19 @@
 class Orbitrace {
-	static #instances = new Map();
+	static #config = null;
 
-	#config = null;
+	static getInstance(config) {
+		// validate already initialized
+		// should allow init with different config.service
 
-	constructor(config) {
+		if (this.#config && this.#config.service === config.service) {
+			console.log(
+				"Orbitrace: Already initialized with the same service name. Skipping init"
+			);
+			return;
+		}
+
 		this.validateConfig(config);
+
 		this.#config = {
 			apiKey: config.apiKey,
 			orgId: config.orgId,
@@ -17,23 +26,7 @@ class Orbitrace {
 		};
 	}
 
-	static getInstance(config) {
-		const serviceName = config.service || "not-specified";
-
-		if (this.#instances.has(serviceName)) {
-			console.log(
-				"Orbitrace: Returning existing instance for service:",
-				serviceName
-			);
-			return this.#instances.get(serviceName);
-		}
-
-		const instance = new Orbitrace(config);
-		this.#instances.set(serviceName, instance);
-		return instance;
-	}
-
-	validateConfig(config) {
+	static validateConfig(config) {
 		const requiredFields = ["apiKey", "orgId", "projectId", "endpoint"];
 		const missingFields = requiredFields.filter((field) => !config[field]);
 
@@ -44,7 +37,17 @@ class Orbitrace {
 		}
 	}
 
-	async captureException(error, metadata = {}) {
+	static checkInitialized() {
+		if (!this.#config) {
+			throw new Error(
+				"Orbitrace must be initialized with Orbitrace.getInstance() before use"
+			);
+		}
+	}
+
+	static async captureException(error, metadata = {}) {
+		this.checkInitialized();
+
 		if (this.#config.disabled) {
 			console.log("Orbitrace: Logging is disabled");
 			return;
@@ -68,7 +71,9 @@ class Orbitrace {
 		}
 	}
 
-	async captureMessage(message, metadata = {}) {
+	static async captureMessage(message, metadata = {}) {
+		this.checkInitialized();
+
 		if (this.#config.disabled) {
 			console.log("Orbitrace: Logging is disabled");
 			return;
@@ -91,7 +96,7 @@ class Orbitrace {
 		}
 	}
 
-	async sendToApi(event, payload) {
+	static async sendToApi(event, payload) {
 		try {
 			const response = await fetch(this.#config.endpoint, {
 				method: "POST",
