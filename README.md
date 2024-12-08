@@ -20,13 +20,13 @@ function initOrbitrace({ service }) {
 	console.log("Initializing Orbitrace for service:", service);
 
 	Orbitrace.init({
-		apiKey: process.env.ORBITRACE_API_KEY,
-		orgId: process.env.ORBITRACE_ORG_ID,
-		projectId: process.env.ORBITRACE_PROJECT_ID,
-		endpoint: process.env.ORBITRACE_ENDPOINT,
-		environment: process.env.API_ENV,
-		service,
-		version: process.env.API_VERSION,
+		apiKey: "<YOUR API KEY>",
+		orgId: "<ORBITAI ORG ID>",
+		projectId: "<ORBITAI PROJECT ID>",
+		endpoint: "<ORBITRACE ENDPOINT>"
+		environment: "YOUR ENVIRONMENT",
+		service: "<YOUR SERVICE",
+		version: "<YOUR SERVICE VERSION>",
 	});
 
 	return Orbitrace;
