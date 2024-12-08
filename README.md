@@ -45,7 +45,7 @@ const orbitrace = getOrbitraceInstance({ service: "api" });
 
 // Capture exceptions
 try {
-    // Your code here
+	// Your code here
 } catch (error) {
 	await orbitrace.captureException(error, {
 		service: "api",
@@ -71,7 +71,7 @@ import Orbitrace from "@orbitai/orbitrace";
 
 export const ORBITRACE_KEY = Symbol("orbitrace");
 
-export function createOrbitraceInstance({ service }) {
+export function getOrbitraceInstance({ service }) {
 	Orbitrace.getInstance({
 		apiKey: import.meta.env.VITE_ORBITRACE_API_KEY,
 		orgId: import.meta.env.VITE_ORBITRACE_ORG_ID,
@@ -101,13 +101,13 @@ export function useOrbitrace() {
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "./App.vue";
-import { createOrbitraceInstance, ORBITRACE_KEY } from "/path/to/orbitrace";
+import { getOrbitraceInstance, ORBITRACE_KEY } from "/path/to/orbitrace";
 
 const app = createApp(App);
 const pinia = createPinia();
 
 // Initialize Orbitrace
-const orbitrace = createOrbitraceInstance({ service: "webapp" });
+const orbitrace = getOrbitraceInstance({ service: "webapp" });
 
 // Make Orbitrace available everywhere
 app.provide(ORBITRACE_KEY, orbitrace);
@@ -129,11 +129,11 @@ import { useOrbitrace } from "/path/to/orbitrace";
 
 const orbitrace = useOrbitrace();
 
-function handleUserAction() {
+async function handleUserAction() {
 	try {
 		// Your code here
 	} catch (error) {
-		orbitrace.captureException(error, {
+		await orbitrace.captureException(error, {
 			component: "UserProfile",
 			action: "updateProfile",
 		});
@@ -141,8 +141,8 @@ function handleUserAction() {
 }
 
 // Log custom events
-function trackEvent() {
-	orbitrace.captureMessage("User completed onboarding", {
+async function trackEvent() {
+	await orbitrace.captureMessage("User completed onboarding", {
 		userId: "user123",
 		completedSteps: ["profile", "preferences"],
 	});
@@ -165,7 +165,7 @@ export const useUserStore = defineStore("user", {
 			try {
 				// Fetch user logic
 			} catch (error) {
-				this.orbitrace.captureException(error, {
+				await this.orbitrace.captureException(error, {
 					store: "userStore",
 					action: "fetchUser",
 				});
