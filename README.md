@@ -48,7 +48,6 @@ try {
 	// Your code here
 } catch (error) {
 	await orbitrace.captureException(error, {
-		service: "api",
 		endpoint: "/users",
 	});
 }
