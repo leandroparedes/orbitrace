@@ -114,7 +114,11 @@ class Orbitrace {
 			return await response.json();
 		} catch (error) {
 			console.error("Orbitrace: Error sending data to API", error);
-			throw error;
+
+			return {
+				success: false,
+				error: error.message,
+			};
 		}
 	}
 }
