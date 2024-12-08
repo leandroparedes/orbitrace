@@ -8,7 +8,8 @@
 	],
 	"scripts": {
 		"build": "mkdir -p dist && cp src/index.js dist/index.js",
-		"prepare": "npm run build"
+		"prepare": "npm run build",
+		"publish": "npm version patch && npm publish --access public"
 	},
 	"publishConfig": {
 		"access": "public"
