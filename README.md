@@ -25,7 +25,7 @@ function initOrbitrace({ service }) {
 		projectId: "<ORBITAI PROJECT ID>",
 		endpoint: "<ORBITRACE ENDPOINT>"
 		environment: "YOUR ENVIRONMENT",
-		service: "<YOUR SERVICE",
+		service,
 		version: "<YOUR SERVICE VERSION>",
 	});
 
