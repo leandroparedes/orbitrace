@@ -1,7 +1,7 @@
 class Orbitrace {
-	#config;
+	static #config = null;
 
-	constructor(config) {
+	static getInstance(config) {
 		this.validateConfig(config);
 
 		this.#config = {
@@ -9,18 +9,14 @@ class Orbitrace {
 			orgId: config.orgId,
 			projectId: config.projectId,
 			endpoint: config.endpoint,
-			environment: config.environment ?? "production",
-			version: config.version ?? "1.0.0",
-			service: config.service ?? "not-specified",
-			disabled: config.disabled ?? false,
+			environment: config.environment || "production",
+			version: config.version || "1.0.0",
+			service: config.service || "not-specified",
+			disabled: config.disabled || false,
 		};
 	}
 
-	static create(config) {
-		return new Orbitrace(config);
-	}
-
-	validateConfig(config) {
+	static validateConfig(config) {
 		const requiredFields = ["apiKey", "orgId", "projectId", "endpoint"];
 		const missingFields = requiredFields.filter((field) => !config[field]);
 
@@ -31,46 +27,66 @@ class Orbitrace {
 		}
 	}
 
-	async captureException(error, metadata = {}) {
+	static checkInitialized() {
+		if (!this.#config) {
+			throw new Error(
+				"Orbitrace must be initialized with Orbitrace.getInstance() before use"
+			);
+		}
+	}
+
+	static async captureException(error, metadata = {}) {
+		this.checkInitialized();
+
 		if (this.#config.disabled) {
 			console.log("Orbitrace: Logging is disabled");
 			return;
 		}
 
-		const payload = {
-			message: error.message,
-			stack: error.stack,
-			metadata: {
-				...metadata,
-				env: this.#config.environment,
-				version: this.#config.version,
-				service: this.#config.service,
-			},
-		};
+		try {
+			const payload = {
+				message: error.message,
+				stack: error.stack,
+				metadata: {
+					...metadata,
+					env: this.#config.environment,
+					version: this.#config.version,
+					service: this.#config.service,
+				},
+			};
 
-		return this.#sendToApi("capture_exception", payload);
+			return this.sendToApi("capture_exception", payload);
+		} catch (err) {
+			console.error("Orbitrace: Error capturing exception", err);
+		}
 	}
 
-	async captureMessage(message, metadata = {}) {
+	static async captureMessage(message, metadata = {}) {
+		this.checkInitialized();
+
 		if (this.#config.disabled) {
 			console.log("Orbitrace: Logging is disabled");
 			return;
 		}
 
-		const payload = {
-			message,
-			metadata: {
-				...metadata,
-				env: this.#config.environment,
-				version: this.#config.version,
-				service: this.#config.service,
-			},
-		};
+		try {
+			const payload = {
+				message,
+				metadata: {
+					...metadata,
+					env: this.#config.environment,
+					version: this.#config.version,
+					service: this.#config.service,
+				},
+			};
 
-		return this.#sendToApi("capture_message", payload);
+			return this.sendToApi("capture_message", payload);
+		} catch (err) {
+			console.error("Orbitrace: Error capturing message", err);
+		}
 	}
 
-	async #sendToApi(event, payload) {
+	static async sendToApi(event, payload) {
 		try {
 			const response = await fetch(this.#config.endpoint, {
 				method: "POST",
@@ -80,14 +96,17 @@ class Orbitrace {
 					"x-orbitrace-org-id": this.#config.orgId,
 					"x-orbitrace-project-id": this.#config.projectId,
 				},
-				body: JSON.stringify({ event, payload }),
+				body: JSON.stringify({
+					event,
+					payload,
+				}),
 			});
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
-			return response.json();
+			return await response.json();
 		} catch (error) {
 			console.error("Orbitrace: Error sending data to API", error);
 			throw error;
