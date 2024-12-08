@@ -19,7 +19,7 @@ const Orbitrace = require("@orbitai/orbitrace");
 function getOrbitraceInstance({ service }) {
 	console.log("Initializing Orbitrace for service:", service);
 
-	Orbitrace.getInstance({
+	return Orbitrace.getInstance({
 		apiKey: process.env.ORBITRACE_API_KEY,
 		orgId: process.env.ORBITRACE_ORG_ID,
 		projectId: process.env.ORBITRACE_PROJECT_ID,
@@ -28,8 +28,6 @@ function getOrbitraceInstance({ service }) {
 		service,
 		version: process.env.APP_VERSION,
 	});
-
-	return Orbitrace;
 }
 
 module.exports = {
@@ -71,7 +69,7 @@ import Orbitrace from "@orbitai/orbitrace";
 export const ORBITRACE_KEY = Symbol("orbitrace");
 
 export function getOrbitraceInstance({ service }) {
-	Orbitrace.getInstance({
+	const orbitrace = Orbitrace.getInstance({
 		apiKey: import.meta.env.VITE_ORBITRACE_API_KEY,
 		orgId: import.meta.env.VITE_ORBITRACE_ORG_ID,
 		projectId: import.meta.env.VITE_ORBITRACE_PROJECT_ID,
@@ -81,7 +79,7 @@ export function getOrbitraceInstance({ service }) {
 		version: import.meta.env.VITE_APP_VERSION,
 	});
 
-	return Orbitrace;
+	return orbitrace;
 }
 
 export function useOrbitrace() {
