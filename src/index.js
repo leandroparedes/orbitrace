@@ -1,7 +1,7 @@
 class Orbitrace {
 	static #config = null;
 
-	static init(config) {
+	static getInstance(config) {
 		// validate already initialized
 		// should allow init with different config.service
 
@@ -40,7 +40,7 @@ class Orbitrace {
 	static checkInitialized() {
 		if (!this.#config) {
 			throw new Error(
-				"Orbitrace must be initialized with Orbitrace.init() before use"
+				"Orbitrace must be initialized with Orbitrace.getInstance() before use"
 			);
 		}
 	}

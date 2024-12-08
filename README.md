@@ -19,7 +19,7 @@ const Orbitrace = require("@orbitai/orbitrace");
 function getOrbitraceInstance({ service }) {
 	console.log("Initializing Orbitrace for service:", service);
 
-	Orbitrace.init({
+	Orbitrace.getInstance({
 		apiKey: process.env.ORBITRACE_API_KEY,
 		orgId: process.env.ORBITRACE_ORG_ID,
 		projectId: process.env.ORBITRACE_PROJECT_ID,
@@ -72,7 +72,7 @@ import Orbitrace from "@orbitai/orbitrace";
 export const ORBITRACE_KEY = Symbol("orbitrace");
 
 export function createOrbitraceInstance({ service }) {
-	Orbitrace.init({
+	Orbitrace.getInstance({
 		apiKey: import.meta.env.VITE_ORBITRACE_API_KEY,
 		orgId: import.meta.env.VITE_ORBITRACE_ORG_ID,
 		projectId: import.meta.env.VITE_ORBITRACE_PROJECT_ID,
