@@ -1,6 +1,6 @@
 {
 	"name": "@orbitai/orbitrace",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"description": "Error tracking and monitoring for Node.js and browser applications",
 	"main": "dist/index.js",
 	"files": [
