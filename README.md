@@ -40,7 +40,7 @@ module.exports = {
 ### 2. Usage
 
 ```javascript
-const { initOrbitrace } = require("./orbitrace");
+const { initOrbitrace } = require("/path/to/orbitrace");
 const Orbitrace = initOrbitrace({ service: "api" });
 
 // Capture exceptions
@@ -101,7 +101,7 @@ export function useOrbitrace() {
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
-import { createOrbitrace, ORBITRACE_KEY } from './orbitrace';
+import { createOrbitrace, ORBITRACE_KEY } from '/path/to/orbitrace';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -125,7 +125,7 @@ app.mount('#app');
 
 ```vue
 <script setup>
-import { useOrbitrace } from '@/orbitrace';
+import { useOrbitrace } from '/path/to/orbitrace';
 
 const orbitrace = useOrbitrace();
 
