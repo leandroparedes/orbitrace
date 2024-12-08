@@ -3,6 +3,7 @@
 	"version": "1.0.35",
 	"description": "Error tracking and monitoring for Node.js and browser applications",
 	"main": "dist/index.js",
+	"private": true,
 	"files": [
 		"dist"
 	],
