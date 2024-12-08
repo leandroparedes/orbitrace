@@ -1,36 +1,25 @@
-class Orbitrace {
-	static #instances = new Map();
+// Orbitrace.js
 
-	#config = null;
+class Orbitrace {
+	#config;
 
 	constructor(config) {
 		this.validateConfig(config);
+
 		this.#config = {
 			apiKey: config.apiKey,
 			orgId: config.orgId,
 			projectId: config.projectId,
 			endpoint: config.endpoint,
-			environment: config.environment || "production",
-			version: config.version || "1.0.0",
-			service: config.service || "not-specified",
-			disabled: config.disabled || false,
+			environment: config.environment ?? "production",
+			version: config.version ?? "1.0.0",
+			service: config.service ?? "not-specified",
+			disabled: config.disabled ?? false,
 		};
 	}
 
-	static getInstance(config) {
-		const serviceName = config.service || "not-specified";
-
-		if (this.#instances.has(serviceName)) {
-			console.log(
-				"Orbitrace: Returning existing instance for service:",
-				serviceName
-			);
-			return this.#instances.get(serviceName);
-		}
-
-		const instance = new Orbitrace(config);
-		this.#instances.set(serviceName, instance);
-		return instance;
+	static create(config) {
+		return new Orbitrace(config);
 	}
 
 	validateConfig(config) {
@@ -50,22 +39,18 @@ class Orbitrace {
 			return;
 		}
 
-		try {
-			const payload = {
-				message: error.message,
-				stack: error.stack,
-				metadata: {
-					...metadata,
-					env: this.#config.environment,
-					version: this.#config.version,
-					service: this.#config.service,
-				},
-			};
+		const payload = {
+			message: error.message,
+			stack: error.stack,
+			metadata: {
+				...metadata,
+				env: this.#config.environment,
+				version: this.#config.version,
+				service: this.#config.service,
+			},
+		};
 
-			return this.sendToApi("capture_exception", payload);
-		} catch (err) {
-			console.error("Orbitrace: Error capturing exception", err);
-		}
+		return this.#sendToApi("capture_exception", payload);
 	}
 
 	async captureMessage(message, metadata = {}) {
@@ -74,24 +59,20 @@ class Orbitrace {
 			return;
 		}
 
-		try {
-			const payload = {
-				message,
-				metadata: {
-					...metadata,
-					env: this.#config.environment,
-					version: this.#config.version,
-					service: this.#config.service,
-				},
-			};
+		const payload = {
+			message,
+			metadata: {
+				...metadata,
+				env: this.#config.environment,
+				version: this.#config.version,
+				service: this.#config.service,
+			},
+		};
 
-			return this.sendToApi("capture_message", payload);
-		} catch (err) {
-			console.error("Orbitrace: Error capturing message", err);
-		}
+		return this.#sendToApi("capture_message", payload);
 	}
 
-	async sendToApi(event, payload) {
+	async #sendToApi(event, payload) {
 		try {
 			const response = await fetch(this.#config.endpoint, {
 				method: "POST",
@@ -101,26 +82,19 @@ class Orbitrace {
 					"x-orbitrace-org-id": this.#config.orgId,
 					"x-orbitrace-project-id": this.#config.projectId,
 				},
-				body: JSON.stringify({
-					event,
-					payload,
-				}),
+				body: JSON.stringify({ event, payload }),
 			});
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
-			return await response.json();
+			return response.json();
 		} catch (error) {
 			console.error("Orbitrace: Error sending data to API", error);
-
-			return {
-				success: false,
-				error: error.message,
-			};
+			throw error;
 		}
 	}
 }
 
-module.exports = Orbitrace;
+export default Orbitrace;
