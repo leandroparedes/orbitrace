@@ -10,6 +10,8 @@ npm install @orbitai/orbitrace
 
 ## Backend Setup
 
+### 1. Initialize Orbitrace
+
 ```javascript
 // orbitrace.js
 const Orbitrace = require("@orbitai/orbitrace");
@@ -33,8 +35,11 @@ function initOrbitrace({ service }) {
 module.exports = {
     initOrbitrace,
 };
+```
 
-// Usage
+### 2. Usage
+
+```javascript
 const { initOrbitrace } = require("./orbitrace");
 const Orbitrace = initOrbitrace({ service: "api" });
 
