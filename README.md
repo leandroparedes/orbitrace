@@ -27,6 +27,7 @@ function getOrbitraceInstance({ service }) {
 		environment: process.env.APP_ENV,
 		service,
 		version: process.env.APP_VERSION,
+		disabled: process.env.APP_ENV !== "production",
 	});
 
 	return Orbitrace;
@@ -79,6 +80,7 @@ export function getOrbitraceInstance({ service }) {
 		environment: import.meta.env.VITE_APP_ENV,
 		service,
 		version: import.meta.env.VITE_APP_VERSION,
+		disabled: process.env.APP_ENV !== "production",
 	});
 
 	return orbitrace;
@@ -198,5 +200,3 @@ ORBITRACE_ENDPOINT=your-endpoint
 APP_ENV=your-environment
 APP_VERSION=your-version
 ```
-
-
