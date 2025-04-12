@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package orbitrace;
+
+// Configuration for Orbitrace client
+message OrbitraceConfig {
+  string api_key = 1;
+  string org_id = 2;
+  string project_id = 3;
+  string endpoint = 4;
+  string environment = 5;
+  string version = 6;
+  string service = 7;
+  bool disabled = 8;
+}
+
+// Metadata for logging
+message Metadata {
+  map<string, string> fields = 1;
+  string env = 2;
+  string version = 3;
+  string service = 4;
+}
+
+// Exception payload
+message ExceptionPayload {
+  string message = 1;
+  string stack = 2;
+  Metadata metadata = 3;
+}
+
+// Message payload
+message MessagePayload {
+  string message = 1;
+  Metadata metadata = 2;
+}
+
+// API Request
+message ApiRequest {
+  string event = 1;
+  oneof payload {
+    ExceptionPayload exception_payload = 2;
+    MessagePayload message_payload = 3;
+  }
+}
+
+// API Response
+message ApiResponse {
+  bool success = 1;
+  string message = 2;
+  map<string, string> data = 3;
+}
+
+// Orbitrace Service definition
+service OrbitraceService {
+  rpc CaptureException(ExceptionPayload) returns (ApiResponse);
+  rpc CaptureMessage(MessagePayload) returns (ApiResponse);
+}

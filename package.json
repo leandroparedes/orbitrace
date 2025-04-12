@@ -15,5 +15,9 @@
 	},
 	"author": "Orbitai",
 	"license": "MIT",
-	"homepage": "https://github.com/leandroparedes/orbitrace#readme"
+	"homepage": "https://github.com/leandroparedes/orbitrace#readme",
+	"devDependencies": {
+		"protobufjs": "^7.4.0",
+		"protobufjs-cli": "^1.1.3"
+	}
 }
