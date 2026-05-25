@@ -2,6 +2,7 @@ class Orbitrace {
 	static #config = null;
 
 	static getInstance(config) {
+		this.assertServerRuntime();
 		this.validateConfig(config);
 
 		this.#config = {
@@ -35,8 +36,12 @@ class Orbitrace {
 		}
 	}
 
-	static isBrowser() {
-		return typeof window !== "undefined" && Boolean(window.location?.origin);
+	static assertServerRuntime() {
+		if (typeof window !== "undefined" || typeof document !== "undefined") {
+			throw new Error(
+				"Orbitrace can only be initialized in backend/server runtimes"
+			);
+		}
 	}
 
 	static async captureException(error, metadata = {}) {
@@ -92,7 +97,7 @@ class Orbitrace {
 
 	static async sendToApi(event, payload) {
 		try {
-			const fetchOptions = {
+			const response = await fetch(this.#config.endpoint, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -104,13 +109,7 @@ class Orbitrace {
 					event,
 					payload,
 				}),
-			};
-
-			if (this.isBrowser()) {
-				fetchOptions.referrerPolicy = "origin";
-			}
-
-			const response = await fetch(this.#config.endpoint, fetchOptions);
+			});
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);

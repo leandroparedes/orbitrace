@@ -1,6 +1,8 @@
 # @orbitai/orbitrace
 
-Error tracking and monitoring for Node.js and browser applications.
+Error tracking and monitoring for backend Node.js applications.
+
+Orbitrace is server-side only. Do not initialize this package in browser or frontend code, because the Orbitrace API key is a backend secret and must not be exposed in public bundles.
 
 ## Installation
 
@@ -17,8 +19,6 @@ npm install @orbitai/orbitrace
 const Orbitrace = require("@orbitai/orbitrace");
 
 function getOrbitraceInstance({ service }) {
-	console.log("Initializing Orbitrace for service:", service);
-
 	Orbitrace.getInstance({
 		apiKey: process.env.ORBITRACE_API_KEY,
 		orgId: process.env.ORBITRACE_ORG_ID,
@@ -27,7 +27,7 @@ function getOrbitraceInstance({ service }) {
 		environment: process.env.APP_ENV,
 		service,
 		version: process.env.APP_VERSION,
-		disabled: process.env.APP_ENV !== "production",
+		disabled: process.env.ORBITRACE_DISABLED === "true",
 	});
 
 	return Orbitrace;
@@ -38,165 +38,45 @@ module.exports = {
 };
 ```
 
-### 2. Usage
+### 2. Capture Exceptions
 
 ```javascript
-const { getOrbitraceInstance } = require("/path/to/orbitrace");
+const { getOrbitraceInstance } = require("./orbitrace");
 const orbitrace = getOrbitraceInstance({ service: "api" });
 
-// Capture exceptions
 try {
 	// Your code here
 } catch (error) {
 	await orbitrace.captureException(error, {
 		endpoint: "/users",
+		action: "createUser",
 	});
 }
+```
 
-// Capture messages
+### 3. Capture Messages
+
+```javascript
 await orbitrace.captureMessage("User registered", {
 	userId: "123",
 	email: "user@example.com",
 });
 ```
 
-## Frontend Setup (Vue 3 + Pinia)
-
-### 1. Initialize Orbitrace
-
-```javascript
-// orbitrace.js
-import { provide, inject } from "vue";
-import Orbitrace from "@orbitai/orbitrace";
-
-export const ORBITRACE_KEY = Symbol("orbitrace");
-
-export function getOrbitraceInstance({ service }) {
-	Orbitrace.getInstance({
-		apiKey: import.meta.env.VITE_ORBITRACE_API_KEY,
-		orgId: import.meta.env.VITE_ORBITRACE_ORG_ID,
-		projectId: import.meta.env.VITE_ORBITRACE_PROJECT_ID,
-		endpoint: import.meta.env.VITE_ORBITRACE_ENDPOINT,
-		environment: import.meta.env.VITE_APP_ENV,
-		service,
-		version: import.meta.env.VITE_APP_VERSION,
-		disabled: process.env.APP_ENV !== "production",
-	});
-
-	return orbitrace;
-}
-
-export function useOrbitrace() {
-	const orbitrace = inject(ORBITRACE_KEY);
-	if (!orbitrace) {
-		throw new Error("Orbitrace not properly initialized");
-	}
-	return orbitrace;
-}
-```
-
-### 2. Setup in Main App
-
-```javascript
-// main.js
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import App from "./App.vue";
-import { getOrbitraceInstance, ORBITRACE_KEY } from "/path/to/orbitrace";
-
-const app = createApp(App);
-const pinia = createPinia();
-
-// Initialize Orbitrace
-const orbitrace = getOrbitraceInstance({ service: "webapp" });
-
-// Make Orbitrace available everywhere
-app.provide(ORBITRACE_KEY, orbitrace);
-
-// Add Orbitrace to Pinia
-pinia.use(({ store }) => {
-	store.orbitrace = orbitrace;
-});
-
-app.use(pinia);
-app.mount("#app");
-```
-
-### 3. Usage in Vue Components
-
-```vue
-<script setup>
-import { useOrbitrace } from "/path/to/orbitrace";
-
-const orbitrace = useOrbitrace();
-
-async function handleUserAction() {
-	try {
-		// Your code here
-	} catch (error) {
-		await orbitrace.captureException(error, {
-			component: "UserProfile",
-			action: "updateProfile",
-		});
-	}
-}
-
-// Log custom events
-async function trackEvent() {
-	await orbitrace.captureMessage("User completed onboarding", {
-		userId: "user123",
-		completedSteps: ["profile", "preferences"],
-	});
-}
-</script>
-```
-
-### 4. Usage in Pinia Stores
-
-```javascript
-// stores/userStore.js
-import { defineStore } from "pinia";
-
-export const useUserStore = defineStore("user", {
-	state: () => ({
-		user: null,
-	}),
-	actions: {
-		async fetchUser() {
-			try {
-				// Fetch user logic
-			} catch (error) {
-				await this.orbitrace.captureException(error, {
-					store: "userStore",
-					action: "fetchUser",
-				});
-				throw error;
-			}
-		},
-	},
-});
-```
-
-### Environment Variables
-
-For Vite:
+## Environment Variables
 
 ```env
-VITE_ORBITRACE_API_KEY=your-api-key
-VITE_ORBITRACE_ORG_ID=your-org-id
-VITE_ORBITRACE_PROJECT_ID=your-project-id
-VITE_ORBITRACE_ENDPOINT=your-endpoint
-VITE_APP_ENV=your-environment
-VITE_APP_VERSION=your-version
-```
-
-For Node.js:
-
-```env
-ORBITRACE_API_KEY=your-api-key
+ORBITRACE_API_KEY=your-backend-api-key
 ORBITRACE_ORG_ID=your-org-id
 ORBITRACE_PROJECT_ID=your-project-id
 ORBITRACE_ENDPOINT=your-endpoint
-APP_ENV=your-environment
-APP_VERSION=your-version
+APP_ENV=production
+APP_VERSION=1.0.0
+ORBITRACE_DISABLED=false
 ```
+
+## Security Model
+
+Orbitrace authenticates ingestion requests with `ORBITRACE_API_KEY`. Keep this key only in backend environments such as servers, workers, functions, and CI jobs. Do not use `VITE_`, `NEXT_PUBLIC_`, or other public frontend environment variables for Orbitrace credentials.
+
+If this package is initialized in a browser runtime, it throws an error before sending events.
