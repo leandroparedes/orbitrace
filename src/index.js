@@ -35,6 +35,10 @@ class Orbitrace {
 		}
 	}
 
+	static isBrowser() {
+		return typeof window !== "undefined" && Boolean(window.location?.origin);
+	}
+
 	static async captureException(error, metadata = {}) {
 		this.checkInitialized();
 
@@ -88,7 +92,7 @@ class Orbitrace {
 
 	static async sendToApi(event, payload) {
 		try {
-			const response = await fetch(this.#config.endpoint, {
+			const fetchOptions = {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -100,7 +104,13 @@ class Orbitrace {
 					event,
 					payload,
 				}),
-			});
+			};
+
+			if (this.isBrowser()) {
+				fetchOptions.referrerPolicy = "origin";
+			}
+
+			const response = await fetch(this.#config.endpoint, fetchOptions);
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
