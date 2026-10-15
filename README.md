@@ -63,6 +63,21 @@ await orbitrace.captureMessage("User registered", {
 });
 ```
 
+### 4. Delivery Behavior
+
+Orbitrace never throws and never blocks your application for long:
+
+- Each request times out after 5 seconds. Failures are logged to the console and swallowed.
+- Repeats of the same event (same message and stack) within 10 seconds are counted locally and sent as one request with an occurrence count, so an error raised in a loop costs at most two requests per 10 seconds.
+- At most 10 requests are in flight at once; events beyond that are dropped.
+- When the API answers `429`, events are dropped until its `Retry-After` period ends.
+
+In short-lived processes (scripts, CI jobs, serverless functions), call `flush()` before exiting so locally counted repeats are sent:
+
+```javascript
+await orbitrace.flush();
+```
+
 ## Environment Variables
 
 ```env
