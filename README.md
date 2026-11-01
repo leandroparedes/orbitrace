@@ -80,7 +80,7 @@ await orbitrace.flush();
 
 ### 5. Automatic Capture
 
-Pass `autoCapture: true` to `getInstance` (SDK 1.2.0 or newer) to capture what nobody handled and record breadcrumbs automatically. It is off unless you turn it on, so upgrading never changes how an application crashes or logs.
+Pass `autoCapture: true` to `getInstance` (SDK 1.2.1 or newer) to capture what nobody handled and record breadcrumbs automatically. It is off unless you turn it on, so upgrading never changes how an application crashes or logs.
 
 ```javascript
 orbitrace.getInstance({ ...config, autoCapture: true });
