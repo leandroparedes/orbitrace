@@ -46,12 +46,36 @@ test("without autoCapture nothing global changes, and manual breadcrumbs still r
 
 	Orbitrace.addBreadcrumb({ category: "checkout", message: "payment started", data: { orderId: 7, token: "x" } });
 	await Orbitrace.captureException(new Error("boom"));
+	await Orbitrace.flush();
 	const [event] = server.events;
 	assert.equal(event.event, "capture_exception");
 	assert.deepEqual(
 		event.payload.breadcrumbs.map(({ timestamp, ...crumb }) => crumb),
 		[{ category: "checkout", level: "info", message: "payment started", data: { orderId: 7, token: "[Filtered]" } }],
 	);
+});
+
+test("capture returns before the API answers, and flush() waits for the delivery", async (t) => {
+	let answer;
+	const server = http.createServer((req, res) => {
+		answer = () => res.end('{"success":true}');
+	});
+	await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+	t.after(() => new Promise((resolve) => server.close(resolve)));
+	const Orbitrace = load(t, { endpoint: `http://127.0.0.1:${server.address().port}/log` });
+
+	const started = Date.now();
+	await Orbitrace.captureException(new Error("slow api"));
+	assert.ok(Date.now() - started < 1000, "the caller is not held while the request is pending");
+	assert.equal(answer, undefined, "returned before the request even reached the server");
+
+	let flushed = false;
+	const flushing = Orbitrace.flush().then(() => (flushed = true));
+	await new Promise((resolve) => setTimeout(resolve, 50));
+	assert.equal(flushed, false, "flush() waits for the in-flight request");
+	answer();
+	await flushing;
+	assert.equal(flushed, true);
 });
 
 test("console and fetch become breadcrumbs, without Orbitrace's own logs and requests or URL secrets", async (t) => {
@@ -70,6 +94,7 @@ test("console and fetch become breadcrumbs, without Orbitrace's own logs and req
 	await fetch(`${server.base}/api/cart?token=secret#x`);
 	for (let i = 0; i < 40; i++) Orbitrace.addBreadcrumb({ message: `step ${i}` });
 	await Orbitrace.captureMessage("checkout failed");
+	await Orbitrace.flush();
 
 	const crumbs = server.events[0].payload.breadcrumbs;
 	assert.equal(crumbs.length, 30, "only the latest 30 are kept");
@@ -81,6 +106,7 @@ test("console and fetch become breadcrumbs, without Orbitrace's own logs and req
 	console.warn("Orbitrace: internal message");
 	await fetch(`${server.base}/api/cart?token=secret#x`);
 	await Orbitrace.captureMessage("checkout failed again");
+	await Orbitrace.flush();
 	const recent = server.events[1].payload.breadcrumbs.map(({ timestamp, data, ...crumb }) => crumb);
 	assert.deepEqual(recent, [
 		{ category: "console", level: "info", message: "loading cart { items: 2 }" },

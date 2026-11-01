@@ -47,7 +47,7 @@ const orbitrace = getOrbitraceInstance({ service: "api" });
 try {
 	// Your code here
 } catch (error) {
-	await orbitrace.captureException(error, {
+	orbitrace.captureException(error, {
 		endpoint: "/users",
 		action: "createUser",
 	});
@@ -57,15 +57,16 @@ try {
 ### 3. Capture Messages
 
 ```javascript
-await orbitrace.captureMessage("User registered", {
+orbitrace.captureMessage("User registered", {
 	userId: "123",
 });
 ```
 
 ### 4. Delivery Behavior
 
-Orbitrace never throws and never blocks your application for long:
+Orbitrace never throws and never blocks your application:
 
+- `captureException` and `captureMessage` return as soon as the event is queued. The request is sent in the background, so a request handler that captures an error does not wait for Orbitrace before answering its own client. Awaiting them is harmless but waits for nothing; use `flush()` when you need to know the events were delivered.
 - Each request times out after 5 seconds. Failures are logged to the console and swallowed.
 - Repeats of the same event (same message and stack) within 10 seconds are counted locally and sent as one request with an occurrence count, so an error raised in a loop costs at most two requests per 10 seconds.
 - At most 10 requests are in flight at once; events beyond that are dropped.

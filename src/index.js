@@ -1,7 +1,8 @@
 const { AsyncLocalStorage } = require("node:async_hooks");
 const util = require("node:util");
 
-// Reporting must never slow down or break the host application, so every failure is logged and swallowed.
+// Reporting must never slow down or break the host application: capture calls return before anything is sent,
+// requests go out in the background, and every failure is logged and swallowed.
 const REQUEST_TIMEOUT_MS = 5000;
 // Repeats of the same event inside this window are counted locally and sent once as a single request.
 const DEDUPE_WINDOW_MS = 10000;
@@ -143,6 +144,7 @@ class Orbitrace {
 		}
 	}
 
+	// Queues the event and returns at once; it is sent in the background. flush() waits for delivery.
 	static async captureException(error, metadata = {}) {
 		const message = error?.message || error?.name || String(error);
 
@@ -437,7 +439,8 @@ class Orbitrace {
 		entry.timer.unref?.();
 		this.#pending.set(key, entry);
 
-		return this.#send(event, payload, 1);
+		// Not awaited: the caller never waits for the network. flush() waits for in-flight requests.
+		this.#send(event, payload, 1);
 	}
 
 	static async #flushPending(key) {
