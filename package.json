@@ -1,6 +1,6 @@
 {
 	"name": "@orbitai/orbitrace",
-	"version": "1.1.12",
+	"version": "1.2.0",
 	"description": "Error tracking for Node.js services: manual and automatic capture with breadcrumbs",
 	"main": "dist/index.js",
 	"files": [
