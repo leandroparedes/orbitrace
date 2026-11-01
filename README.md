@@ -77,12 +77,66 @@ In short-lived processes (scripts, CI jobs, serverless functions), call `flush()
 await orbitrace.flush();
 ```
 
+### 5. Automatic Capture
+
+Pass `autoCapture: true` to `getInstance` (SDK 1.2.0 or newer) to capture what nobody handled and record breadcrumbs automatically. It is off unless you turn it on, so upgrading never changes how an application crashes or logs.
+
+```javascript
+orbitrace.getInstance({ ...config, autoCapture: true });
+// or choose parts:
+orbitrace.getInstance({ ...config, autoCapture: { exceptions: true, console: true, fetch: false } });
+```
+
+- **Uncaught exceptions and unhandled rejections** are captured. The process still crashes as Node would: the SDK waits up to 2 seconds for the event to send, prints the error and exits with code 1, and respects `--unhandled-rejections`. If the application registers its own `uncaughtException` or `unhandledRejection` handlers, they decide instead.
+- **Breadcrumbs** are recorded from `console` calls and `fetch` requests (URLs without credentials, query string or fragment). The SDK's own logs and requests are skipped.
+- `orbitrace.close()` removes everything automatic capture installed.
+
+### 6. Breadcrumbs
+
+Breadcrumbs are the last 30 things that happened before an event, sent with it. Add your own at important steps:
+
+```javascript
+orbitrace.addBreadcrumb({
+	category: "checkout",
+	message: "Payment authorized",
+	level: "info", // debug, info, warning or error
+	data: { orderId: "ord_1" },
+});
+```
+
+Breadcrumb data is filtered like metadata. Work that runs concurrently should have its own breadcrumbs: use the Express handlers or `wrap()` below, or `orbitrace.withScope(() => work())`.
+
+### 7. Express
+
+```javascript
+app.use(orbitrace.expressRequestHandler()); // before the routes: breadcrumbs per request
+app.post("/checkout", async (req, res, next) => {
+	try {
+		res.json(await checkout(req.body));
+	} catch (error) {
+		next(error); // Express 4 does not pass errors from async routes on by itself
+	}
+});
+app.use(orbitrace.expressErrorHandler()); // after the routes: captures with method, path and status, then calls next(error)
+```
+
+### 8. Cloud Functions and Other Serverless Handlers
+
+The runtime may freeze as soon as a handler returns. `wrap()` gives each call its own breadcrumbs, captures a thrown error (and rethrows it), and sends pending events before returning:
+
+```javascript
+exports.checkout = onRequest(orbitrace.wrap(async (req, res) => {
+	res.json(await checkout(req.body));
+}));
+```
+
 ## Data Collected
 
 Each event stores:
 
 - The error message (truncated to 200 characters) and stack trace, or the message text.
 - The `metadata` object you pass, plus `env`, `version` and `service` from your configuration.
+- Breadcrumbs, when there are any: the last 30 recorded before the event.
 - The IP address and user agent of the server that sent the request, with an approximate location derived from that IP.
 
 Before sending, metadata values whose key contains `password`, `passwd`, `secret`, `token`, `authorization`, `cookie`, `apikey`, `privatekey`, `credential` or `session` (ignoring case, `-` and `_`) are replaced with `[Filtered]`, at any depth. Error messages and stack traces are sent as they are.

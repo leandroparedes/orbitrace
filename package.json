@@ -1,12 +1,13 @@
 {
 	"name": "@orbitai/orbitrace",
 	"version": "1.1.12",
-	"description": "Error tracking and monitoring for backend Node.js applications",
+	"description": "Error tracking for Node.js services: manual and automatic capture with breadcrumbs",
 	"main": "dist/index.js",
 	"files": [
 		"dist"
 	],
 	"scripts": {
+		"test": "node --test test/*.test.js",
 		"build": "mkdir -p dist && cp src/index.js dist/index.js",
 		"deploy": "npm version patch && npm run build && npm publish --access public"
 	},
