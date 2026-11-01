@@ -5,6 +5,57 @@ const DEDUPE_WINDOW_MS = 10000;
 // Caps concurrent requests so a loop of distinct errors cannot exhaust the host's sockets or memory.
 const MAX_IN_FLIGHT = 10;
 const DEFAULT_RETRY_AFTER_SECONDS = 60;
+// Metadata keys containing any of these (ignoring case, "-" and "_") have their values replaced before sending.
+const SENSITIVE_KEY_PARTS = [
+	"password",
+	"passwd",
+	"secret",
+	"token",
+	"authorization",
+	"cookie",
+	"apikey",
+	"privatekey",
+	"credential",
+	"session",
+];
+const FILTERED_VALUE = "[Filtered]";
+
+function isSensitiveKey(key) {
+	const normalized = key.toLowerCase().replace(/[-_]/g, "");
+	return SENSITIVE_KEY_PARTS.some((part) => normalized.includes(part));
+}
+
+// Recurses only into plain objects and arrays so values like Date keep their JSON form.
+// `ancestors` breaks reference cycles, which would otherwise make the request body unserializable.
+function filterSensitive(value, ancestors = new WeakSet()) {
+	if (value === null || typeof value !== "object") {
+		return value;
+	}
+
+	if (ancestors.has(value)) {
+		return "[Circular]";
+	}
+
+	const isArray = Array.isArray(value);
+	const prototype = Object.getPrototypeOf(value);
+
+	if (!isArray && prototype !== Object.prototype && prototype !== null) {
+		return value;
+	}
+
+	ancestors.add(value);
+	const filtered = isArray
+		? value.map((item) => filterSensitive(item, ancestors))
+		: Object.fromEntries(
+				Object.entries(value).map(([key, item]) => [
+					key,
+					isSensitiveKey(key) ? FILTERED_VALUE : filterSensitive(item, ancestors),
+				])
+			);
+	ancestors.delete(value);
+
+	return filtered;
+}
 
 class Orbitrace {
 	static #config = null;
@@ -82,7 +133,7 @@ class Orbitrace {
 		const payload = {
 			...fields,
 			metadata: {
-				...metadata,
+				...filterSensitive(metadata),
 				env: this.#config.environment,
 				version: this.#config.version,
 				service: this.#config.service,

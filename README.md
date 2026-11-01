@@ -59,7 +59,6 @@ try {
 ```javascript
 await orbitrace.captureMessage("User registered", {
 	userId: "123",
-	email: "user@example.com",
 });
 ```
 
@@ -77,6 +76,18 @@ In short-lived processes (scripts, CI jobs, serverless functions), call `flush()
 ```javascript
 await orbitrace.flush();
 ```
+
+## Data Collected
+
+Each event stores:
+
+- The error message (truncated to 200 characters) and stack trace, or the message text.
+- The `metadata` object you pass, plus `env`, `version` and `service` from your configuration.
+- The IP address and user agent of the server that sent the request, with an approximate location derived from that IP.
+
+Before sending, metadata values whose key contains `password`, `passwd`, `secret`, `token`, `authorization`, `cookie`, `apikey`, `privatekey`, `credential` or `session` (ignoring case, `-` and `_`) are replaced with `[Filtered]`, at any depth. Error messages and stack traces are sent as they are.
+
+Filtering is a safety net, not a guarantee. Do not put personal data (emails, names, addresses) or secrets in metadata or error messages; send stable identifiers such as a user id instead.
 
 ## Environment Variables
 
