@@ -168,6 +168,19 @@ app.use(Orbitrace.vue);
 
 Every browser event carries `page`: the URL (without query string or fragment), referrer, viewport and language. Requests use `keepalive`, so an error reported just before the page closes still arrives. Production stacks are minified; issues still group correctly across deploys because file hashes and line numbers are ignored, so keep `version` set to your release to see which build introduced a problem.
 
+## Source Maps
+
+Production bundles are minified, so browser stacks name files like `index-39fc6623.js` and functions like `Xr`. Upload the build's source maps and Orbitrace resolves each event of that release to the original file, line and function, groups issues by them, and shows a few lines of source around each frame. Maps are stored privately, never served to browsers, and deleted after 90 days.
+
+Build with hidden source maps (Vite: `build.sourcemap = "hidden"`), then run the command the package installs, from a build or deploy job that has the server API key:
+
+```bash
+ORBITRACE_API_KEY=... ORBITRACE_ORG_ID=... ORBITRACE_PROJECT_ID=... ORBITRACE_ENDPOINT=... \
+  npx orbitrace-sourcemaps upload --release 1.22.9 --dir dist --delete
+```
+
+`--release` must equal the `version` the browser SDK sends. `--dir` is searched for `.map` files. `--delete` removes them afterwards so a hosting deploy of the same directory cannot publish them. Upload before the bundle goes live: events that arrive before their release's maps keep the minified stack.
+
 ## Data Collected
 
 Each event stores:

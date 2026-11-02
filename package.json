@@ -1,8 +1,11 @@
 {
 	"name": "@orbitai/orbitrace",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "Error tracking for Node.js services and browser apps: manual and automatic capture with breadcrumbs",
 	"main": "dist/index.js",
+	"bin": {
+		"orbitrace-sourcemaps": "./bin/orbitrace-sourcemaps.js"
+	},
 	"exports": {
 		".": "./dist/index.js",
 		"./browser": {
@@ -13,7 +16,8 @@
 		"./package.json": "./package.json"
 	},
 	"files": [
-		"dist"
+		"dist",
+		"bin"
 	],
 	"scripts": {
 		"test": "node --test test/*.test.js",
