@@ -1,15 +1,27 @@
 {
 	"name": "@orbitai/orbitrace",
-	"version": "1.2.1",
-	"description": "Error tracking for Node.js services: manual and automatic capture with breadcrumbs",
+	"version": "1.3.0",
+	"description": "Error tracking for Node.js services and browser apps: manual and automatic capture with breadcrumbs",
 	"main": "dist/index.js",
+	"exports": {
+		".": "./dist/index.js",
+		"./browser": {
+			"import": "./dist/browser.mjs",
+			"require": "./dist/browser.cjs",
+			"default": "./dist/browser.mjs"
+		},
+		"./package.json": "./package.json"
+	},
 	"files": [
 		"dist"
 	],
 	"scripts": {
 		"test": "node --test test/*.test.js",
-		"build": "mkdir -p dist && cp src/index.js dist/index.js",
-		"deploy": "npm version patch && npm run build && npm publish --access public"
+		"build": "esbuild src/index.js --bundle --platform=node --target=node18 --format=cjs --outfile=dist/index.js && esbuild src/browser.js --bundle --platform=browser --target=es2020 --format=esm --outfile=dist/browser.mjs && esbuild src/browser.js --bundle --platform=browser --target=es2020 --format=cjs --outfile=dist/browser.cjs",
+		"deploy": "npm test && npm version patch && npm run build && npm publish --access public"
+	},
+	"devDependencies": {
+		"esbuild": "^0.24.2"
 	},
 	"publishConfig": {
 		"access": "public"
